@@ -1,0 +1,12 @@
+venv/
+venv/*
+
+.env
+/.env
+
+/videos
+/videos/*
+
+/uploads/videos
+__pycache__/
+*.pyc
