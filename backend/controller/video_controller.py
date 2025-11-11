@@ -72,7 +72,7 @@ async def save_candidate_video(user_id: int, question_id: int, file, db: Session
 
     # Convert the file to MP4 using ffmpeg
     output_filename = f"{user_name}_question{question_id}.mp4"
-    output_filepath = os.path.join(user_dir, output_filename)
+    output_filepath = os.path.join(user_dir, output_filename).replace("\\", "/")
     
     try:
         subprocess.run(['ffmpeg', '-i', temp_filepath, '-c:v', 'libx264', '-c:a', 'aac', '-strict', 'experimental', output_filepath], check=True)
@@ -126,7 +126,12 @@ def list_candidate_videos(db: Session):
 
 
 def list_videos_by_user(user_id: int, db: Session):
-    return db.query(Answer).filter(Answer.user_id == user_id).all()
+    return (
+        db.query(Answer, Questions.question_title)
+        .join(Questions, Answer.question_id == Questions.id_question)
+        .filter(Answer.user_id == user_id)
+        .all()
+    )
 
 
 def list_videos_by_question(question_id: int, db: Session):

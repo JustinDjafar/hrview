@@ -92,15 +92,20 @@ def get_all_hr_videos(db: Session = Depends(get_db)):
 # ✅ List video berdasarkan user_id
 @router.get("/videos/kandidat/{user_id}")
 def get_videos_by_user(user_id: int, db: Session = Depends(get_db)):
-    answers = list_videos_by_user(user_id, db)
+    results = list_videos_by_user(user_id, db)
+    if not results:
+        return []
     return [
         {
             "answer_id": a.id,
             "user_id": a.user_id,
             "question_id": a.question_id,
-            "video_url": a.video_url
+            "video_url": a.video_url,
+            "question": {
+                "title": question_title
+            }
         }
-        for a in answers
+        for a, question_title in results
     ]
 
 @router.get("/answers/all")

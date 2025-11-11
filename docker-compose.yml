@@ -11,6 +11,6 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - "5173:5173"
     volumes:
-      - ./frontend/src:/app/src
+      - ./frontend:/app

@@ -116,67 +116,6 @@ const UserForm = ({
                 </div>
             </div>
 
-            {/* Assign List Pertanyaan (Hanya untuk User biasa) */}
-            {user.role === 'user' && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Assign List Pertanyaan
-                        <span className="text-xs font-normal text-gray-500 ml-2">
-                            (Pilih satu list)
-                        </span>
-                    </label>
-                    
-                    {questionLists.length === 0 ? (
-                        <p className="text-gray-500 text-sm bg-white p-4 rounded-lg border border-gray-200">
-                            Belum ada list pertanyaan tersedia. Buat list pertanyaan terlebih dahulu.
-                        </p>
-                    ) : (
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                            <label className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                !user.assignedListId 
-                                    ? 'border-gray-400 bg-white' 
-                                    : 'border-gray-200 bg-white hover:bg-gray-50'
-                            }`}>
-                                <input
-                                    type="radio"
-                                    name="assignedList"
-                                    checked={!user.assignedListId}
-                                    onChange={() => setUser(prev => ({ ...prev, assignedListId: null }))}
-                                    className="w-5 h-5 text-gray-600"
-                                />
-                                <div className="flex-1">
-                                    <p className="text-gray-700 font-medium">Tidak ada list</p>
-                                    <p className="text-gray-500 text-xs">User belum ditugaskan</p>
-                                </div>
-                            </label>
-
-                            {questionLists.map(list => (
-                                <label 
-                                    key={list.id} 
-                                    className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                        user.assignedListId === list.id 
-                                            ? 'border-blue-500 bg-blue-50' 
-                                            : 'border-gray-200 bg-white hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <input
-                                        type="radio"
-                                        name="assignedList"
-                                        checked={user.assignedListId === list.id}
-                                        onChange={() => setUser(prev => ({ ...prev, assignedListId: list.id }))}
-                                        className="w-5 h-5 text-blue-600"
-                                    />
-                                    <div className="flex-1">
-                                        <p className="text-gray-900 font-semibold">{list.name}</p>
-                                        <p className="text-gray-600 text-sm">{list.questionCount || 0} pertanyaan</p>
-                                    </div>
-                                </label>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
             {/* Info untuk Admin */}
             {user.role === 'admin' && (
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">

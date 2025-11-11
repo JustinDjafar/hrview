@@ -16,7 +16,7 @@ export default function InterviewResultUser() {
     if (!user || userLoading) return; // Don't fetch if user is not loaded
 
     try {
-      const response = await api.get(`/video/answers/user/${user.id}`); // Fetch answers for the current user
+      const response = await api.get(`/video/videos/kandidat/${user.id_user}`); // Fetch answers for the current user
       setAnswers(response.data);
     } catch (err) {
       setError('Failed to fetch your interview answers.');

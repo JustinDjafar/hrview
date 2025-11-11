@@ -9,53 +9,67 @@ export default function VideoInterviewUser() {
   const [assignedList, setAssignedList] = useState(null);
   const [listQuestions, setListQuestions] = useState([]);
   const [submittedAnswers, setSubmittedAnswers] = useState([]);
+  const [interviewCompleted, setInterviewCompleted] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && user && user.assigned_list_id) {
-      const fetchAssignedList = async () => {
-        try {
+    const fetchAndCheck = async () => {
+      if (loading || !user) {
+        // Wait until user is loaded
+        return;
+      }
+
+      setPageLoading(true);
+
+      try {
+        if (user.interview_status === 'completed') {
+          setInterviewCompleted(true);
+          setAssignedList(null); // No need to show list if completed
+        } else if (user.assigned_list_id) {
           const listResponse = await api.get(`/list/lists-all`);
           const foundList = listResponse.data.find(list => list.id_list_question === user.assigned_list_id);
-          
+
           if (foundList) {
             setAssignedList(foundList);
             setListQuestions(foundList.questions);
 
-            // Fetch submitted answers
             const answersResponse = await api.get(`/video/answers/${user.id_user}/${foundList.id_list_question}`);
-            setSubmittedAnswers(answersResponse.data);
+            const fetchedAnswers = answersResponse.data;
+            setSubmittedAnswers(fetchedAnswers);
+
+            if (fetchedAnswers.length > 0 && fetchedAnswers.length === foundList.questions.length) {
+              setInterviewCompleted(true);
+              if (user.interview_status !== 'completed') {
+                await api.post('/users/me/complete-interview');
+              }
+            } else {
+              setInterviewCompleted(false);
+            }
+          } else {
+            // Assigned list not found, treat as no interview assigned
+            setAssignedList(null);
+            setInterviewCompleted(false);
           }
-        } catch (error) {
-          console.error('Failed to fetch assigned list or answers:', error);
+        } else {
+          // No list assigned
+          setAssignedList(null);
+          setInterviewCompleted(false);
         }
-      };
-      fetchAssignedList();
-    }
+      } catch (error) {
+        console.error('Failed to fetch interview data:', error);
+        // Fallback to user status on error
+        setInterviewCompleted(user.interview_status === 'completed');
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchAndCheck();
   }, [user, loading]);
 
-  useEffect(() => {
-    if (
-      user &&
-      listQuestions.length > 0 &&
-      submittedAnswers.length === listQuestions.length
-    ) {
-      const completeInterview = async () => {
-        try {
-          await api.post('/users/me/complete-interview');
-          console.log('Interview marked as completed.');
-        } catch (error) {
-          console.error('Failed to mark interview as completed:', error);
-        }
-      };
-      completeInterview();
-    }
-  }, [submittedAnswers, listQuestions, user]);
-
-  if (loading) {
-    return <div>Loading user data...</div>;
+  if (pageLoading) {
+    return <div>Loading page...</div>;
   }
-
-  const isInterviewCompleted = user?.interview_status === 'completed' || (submittedAnswers.length === listQuestions.length && listQuestions.length > 0);
 
   return (
     <div className="h-full w-full p-8 left-10" style={{ backgroundColor: '#FFFDF6' }}>
@@ -84,7 +98,7 @@ export default function VideoInterviewUser() {
                     );
                   })}
                 </div>
-                {isInterviewCompleted ? (
+                {interviewCompleted ? (
                   <div className="mt-6 text-center">
                     <p className="text-lg font-semibold text-green-600">Interview completed, please wait for result</p>
                   </div>
@@ -103,26 +117,6 @@ export default function VideoInterviewUser() {
                 <p className="text-gray-600">Silakan hubungi administrator Anda.</p>
               </div>
             )}
-            
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Practice Sessions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-gray-800 mb-2">Mock Interview</h4>
-                  <p className="text-sm text-gray-600 mb-3">Practice with AI interviewer</p>
-                  <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Start Practice
-                  </button>
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-medium text-gray-800 mb-2">Question Bank</h4>
-                  <p className="text-sm text-gray-600 mb-3">Common interview questions</p>
-                  <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                    Browse Questions
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

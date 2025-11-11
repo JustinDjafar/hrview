@@ -1,3 +1,5 @@
+import os
+import shutil
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -5,6 +7,7 @@ from pydantic import BaseModel, EmailStr
 from database import get_db
 from models.list_questions import ListQuestions
 from models.users import User, UserRole
+from models.answer import Answer
 from controller.auth_controller import get_current_user, admin_required, complete_interview
 from schemas.users import AssignListRequest, UserCreate, UserResponse, UserUpdate
 
@@ -287,6 +290,8 @@ async def update_user(
     )
 
 
+import shutil
+
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
@@ -310,6 +315,15 @@ async def delete_user(
             detail="Tidak dapat menghapus akun sendiri"
         )
     
+    # Hapus semua jawaban (answers) yang terkait dengan user
+    db.query(Answer).filter(Answer.user_id == user_id).delete()
+    
+    # Delete the user's video directory
+    user_name = user.name.replace(" ", "_")
+    user_video_dir = os.path.join("videos", "kandidat", user_name)
+    if os.path.exists(user_video_dir):
+        shutil.rmtree(user_video_dir)
+        
     db.delete(user)
     db.commit()
     return None
